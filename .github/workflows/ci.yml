@@ -122,7 +122,8 @@ jobs:
           envs: APP_DIR
           script_stop: true
           script: |
-            set -eu
+            set -eux
+            trap 'echo "Deploy failed at line $LINENO" >&2' ERR
             APP_DIR="${APP_DIR:-/opt/zip2telegraph-bot}"
 
             mkdir -p "${APP_DIR}"
