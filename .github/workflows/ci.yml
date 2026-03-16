@@ -137,12 +137,15 @@ jobs:
             tar -xzf /tmp/zip2telegraph-bot-deploy/release.tgz -C "${APP_DIR}"
 
             cd "${APP_DIR}"
-            if grep -Eq '^USE_LOCAL_TELEGRAM_BOT_API=true$' .env; then
-              if ! grep -Eq '^TELEGRAM_API_ID=.+$' .env; then
+            USE_LOCAL_TELEGRAM_BOT_API_VALUE="$(awk -F= '/^USE_LOCAL_TELEGRAM_BOT_API=/{print $2}' .env | tail -n 1)"
+            TELEGRAM_API_ID_VALUE="$(awk -F= '/^TELEGRAM_API_ID=/{print $2}' .env | tail -n 1)"
+            TELEGRAM_API_HASH_VALUE="$(awk -F= '/^TELEGRAM_API_HASH=/{print $2}' .env | tail -n 1)"
+            if [ "${USE_LOCAL_TELEGRAM_BOT_API_VALUE}" = "true" ]; then
+              if [ -z "${TELEGRAM_API_ID_VALUE}" ]; then
                 echo "TELEGRAM_API_ID is required when USE_LOCAL_TELEGRAM_BOT_API=true" >&2
                 exit 1
               fi
-              if ! grep -Eq '^TELEGRAM_API_HASH=.+$' .env; then
+              if [ -z "${TELEGRAM_API_HASH_VALUE}" ]; then
                 echo "TELEGRAM_API_HASH is required when USE_LOCAL_TELEGRAM_BOT_API=true" >&2
                 exit 1
               fi
