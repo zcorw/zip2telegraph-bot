@@ -1,0 +1,21 @@
+services:
+  bot:
+    depends_on:
+      - telegram-bot-api
+    environment:
+      TELEGRAM_API_BASE: http://telegram-bot-api:8081
+      TELEGRAM_LOCAL_MODE: "true"
+
+  telegram-bot-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.telegram-bot-api
+    env_file:
+      - .env
+    working_dir: /var/lib/telegram-bot-api
+    command:
+      - --local
+      - --http-port=8081
+    volumes:
+      - ./telegram-bot-api-data:/var/lib/telegram-bot-api
+    restart: unless-stopped
