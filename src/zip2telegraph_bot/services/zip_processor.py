@@ -13,7 +13,7 @@ from zip2telegraph_bot.utils.sorting import natural_sort_key
 
 
 SUPPORTED_IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tif", ".tiff"}
-CONVERT_TO_PNG_SUFFIXES = {".bmp", ".tif", ".tiff"}
+CONVERT_TO_PNG_SUFFIXES = {".webp", ".bmp", ".tif", ".tiff"}
 
 
 class ZipProcessor:

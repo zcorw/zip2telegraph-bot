@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import mimetypes
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,14 @@ from zip2telegraph_bot.errors import UserVisibleError
 
 
 logger = logging.getLogger(__name__)
+
+MIME_TYPE_BY_SUFFIX = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
 
 
 class TelegraphClient:
@@ -51,12 +60,23 @@ class TelegraphClient:
         logger.warning("telegraph access token created; persist TELEGRAPH_ACCESS_TOKEN=%s", self._access_token)
 
     async def upload_image(self, image_path: Path) -> str:
+        content_type = MIME_TYPE_BY_SUFFIX.get(image_path.suffix.lower()) or mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
+
         with image_path.open("rb") as fh:
-            files = {"file": (image_path.name, fh, "application/octet-stream")}
+            files = {"file": (image_path.name, fh, content_type)}
             response = await self._http.post(self._upload_url, files=files)
 
         if response.status_code >= 400:
-            raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", "Telegraph 图片上传失败")
+            logger.warning(
+                "telegraph upload failed",
+                extra={
+                    "status_code": response.status_code,
+                    "image_name": image_path.name,
+                    "content_type": content_type,
+                    "response_text": response.text[:500],
+                },
+            )
+            raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", f"Telegraph 图片上传失败，HTTP {response.status_code}")
 
         data = response.json()
         if not isinstance(data, list) or not data:
@@ -113,4 +133,3 @@ class TelegraphClient:
         if not isinstance(result, dict):
             raise UserVisibleError(error_code, "Telegraph API 返回格式异常")
         return result
-
