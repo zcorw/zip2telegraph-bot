@@ -68,13 +68,11 @@ class TelegraphClient:
 
         if response.status_code >= 400:
             logger.warning(
-                "telegraph upload failed",
-                extra={
-                    "status_code": response.status_code,
-                    "image_name": image_path.name,
-                    "content_type": content_type,
-                    "response_text": response.text[:500],
-                },
+                "telegraph upload failed status=%s image=%s content_type=%s body=%r",
+                response.status_code,
+                image_path.name,
+                content_type,
+                response.text[:500],
             )
             raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", f"Telegraph 图片上传失败，HTTP {response.status_code}")
 
