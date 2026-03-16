@@ -140,18 +140,21 @@ jobs:
             USE_LOCAL_TELEGRAM_BOT_API_VALUE="$(awk -F= '/^USE_LOCAL_TELEGRAM_BOT_API=/{print $2}' .env | tail -n 1)"
             TELEGRAM_API_ID_VALUE="$(awk -F= '/^TELEGRAM_API_ID=/{print $2}' .env | tail -n 1)"
             TELEGRAM_API_HASH_VALUE="$(awk -F= '/^TELEGRAM_API_HASH=/{print $2}' .env | tail -n 1)"
-            if [ "${USE_LOCAL_TELEGRAM_BOT_API_VALUE}" = "true" ]; then
-              if [ -z "${TELEGRAM_API_ID_VALUE}" ]; then
-                echo "TELEGRAM_API_ID is required when USE_LOCAL_TELEGRAM_BOT_API=true" >&2
-                exit 1
-              fi
-              if [ -z "${TELEGRAM_API_HASH_VALUE}" ]; then
-                echo "TELEGRAM_API_HASH is required when USE_LOCAL_TELEGRAM_BOT_API=true" >&2
-                exit 1
-              fi
-              docker compose -f docker-compose.yml -f docker-compose.local-bot-api.yml up -d --build --remove-orphans
-            else
-              docker compose up -d --build --remove-orphans
-            fi
+            case "${USE_LOCAL_TELEGRAM_BOT_API_VALUE}" in
+              true)
+                if [ -z "${TELEGRAM_API_ID_VALUE}" ]; then
+                  echo "TELEGRAM_API_ID is required when USE_LOCAL_TELEGRAM_BOT_API=true" >&2
+                  exit 1
+                fi
+                if [ -z "${TELEGRAM_API_HASH_VALUE}" ]; then
+                  echo "TELEGRAM_API_HASH is required when USE_LOCAL_TELEGRAM_BOT_API=true" >&2
+                  exit 1
+                fi
+                docker compose -f docker-compose.yml -f docker-compose.local-bot-api.yml up -d --build --remove-orphans
+                ;;
+              *)
+                docker compose up -d --build --remove-orphans
+                ;;
+            esac
             docker image prune -f
             rm -f /tmp/zip2telegraph-bot-deploy/release.tgz
