@@ -17,5 +17,5 @@ services:
       - --local
       - --http-port=8081
     volumes:
-      - ./telegram-bot-api-data:/var/lib/telegram-bot-api
+      - ${HOST_TELEGRAM_BOT_API_DATA_DIR:-./telegram-bot-api-data}:/var/lib/telegram-bot-api
     restart: unless-stopped

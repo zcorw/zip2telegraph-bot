@@ -110,6 +110,13 @@ python -m zip2telegraph_bot
 - The bot removes task temp directories after completion
 - On startup, the bot removes stale temp directories left by previous crashes
 
+Docker bind mounts can be customized from `.env` with:
+
+- `HOST_DATA_DIR`
+- `HOST_TMP_DIR`
+- `HOST_PUBLIC_IMAGE_DIR`
+- `HOST_TELEGRAM_BOT_API_DATA_DIR`
+
 ## Static image hosting
 
 This project no longer relies on `https://telegra.ph/upload`.

@@ -5,7 +5,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data:/app/data
-      - ./tmp:/app/tmp
-      - ./public-images:/app/public-images
+      - ${HOST_DATA_DIR:-./data}:/app/data
+      - ${HOST_TMP_DIR:-./tmp}:/app/tmp
+      - ${HOST_PUBLIC_IMAGE_DIR:-./public-images}:/app/public-images
     restart: unless-stopped

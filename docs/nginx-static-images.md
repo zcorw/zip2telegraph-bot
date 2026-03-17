@@ -10,16 +10,26 @@ Example:
 ```env
 PUBLIC_IMAGE_DIR=./public-images
 PUBLIC_IMAGE_BASE_URL=https://img.example.com/zip2telegraph
+HOST_PUBLIC_IMAGE_DIR=/opt/zip2telegraph-public-images
 ```
 
-With the default deployment directory `/opt/zip2telegraph-bot`, that means the
-bot writes files to:
+`PUBLIC_IMAGE_DIR` is the container-internal path used by the bot.
+
+`HOST_PUBLIC_IMAGE_DIR` is the host-side path used by Docker bind mounting.
+
+With the example above, the bot writes files into the container at:
 
 ```text
-/opt/zip2telegraph-bot/public-images
+/app/public-images
 ```
 
-and Telegraph pages will reference URLs like:
+and Nginx should serve files from the host at:
+
+```text
+/opt/zip2telegraph-public-images
+```
+
+Telegraph pages will then reference URLs like:
 
 ```text
 https://img.example.com/zip2telegraph/<task_id>/0001-image.png
@@ -35,7 +45,7 @@ server {
     server_name img.example.com;
 
     location /zip2telegraph/ {
-        alias /opt/zip2telegraph-bot/public-images/;
+        alias /opt/zip2telegraph-public-images/;
         autoindex off;
         add_header Cache-Control "public, max-age=31536000, immutable";
         try_files $uri =404;
@@ -43,27 +53,31 @@ server {
 }
 ```
 
+A ready-to-copy template file is included at:
+
+`deploy/nginx/zip2telegraph-images.conf.example`
+
 If your existing TLS setup is already managed elsewhere, apply the same path on
 the `443` server block instead of creating a new plain HTTP server.
 
 ## Mapping rules
 
 - `PUBLIC_IMAGE_BASE_URL` path must match the Nginx location path
-- The Nginx `alias` path must point at the host-side `public-images/` directory
+- The Nginx `alias` path must point at `HOST_PUBLIC_IMAGE_DIR`
 - Trailing slash matters: keep it on the `alias` path
 
 For the example above:
 
 - `PUBLIC_IMAGE_BASE_URL=https://img.example.com/zip2telegraph`
 - `location /zip2telegraph/`
-- `alias /opt/zip2telegraph-bot/public-images/;`
+- `alias /opt/zip2telegraph-public-images/;`
 
 ## Verification
 
 After deployment, check that files appear in:
 
 ```bash
-ls -la /opt/zip2telegraph-bot/public-images
+ls -la /opt/zip2telegraph-public-images
 ```
 
 Then open one of the generated URLs directly in your browser or with `curl`:
