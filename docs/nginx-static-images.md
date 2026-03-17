@@ -42,7 +42,19 @@ If you already have a dedicated image subdomain:
 ```nginx
 server {
     listen 80;
+    listen [::]:80;
     server_name img.example.com;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name img.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/img.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/img.example.com/privkey.pem;
 
     location /zip2telegraph/ {
         alias /opt/zip2telegraph-public-images/;
@@ -57,8 +69,8 @@ A ready-to-copy template file is included at:
 
 `deploy/nginx/zip2telegraph-images.conf.example`
 
-If your existing TLS setup is already managed elsewhere, apply the same path on
-the `443` server block instead of creating a new plain HTTP server.
+Replace the certificate paths with your real certificate files. The example
+above assumes Let's Encrypt.
 
 ## Mapping rules
 

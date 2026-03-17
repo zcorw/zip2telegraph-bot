@@ -4,6 +4,10 @@ services:
       context: .
     env_file:
       - .env
+    environment:
+      DATA_DIR: /app/data
+      TMP_DIR: /app/tmp
+      PUBLIC_IMAGE_DIR: /app/public-images
     volumes:
       - ${HOST_DATA_DIR:-./data}:/app/data
       - ${HOST_TMP_DIR:-./tmp}:/app/tmp

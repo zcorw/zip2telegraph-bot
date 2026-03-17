@@ -117,6 +117,14 @@ Docker bind mounts can be customized from `.env` with:
 - `HOST_PUBLIC_IMAGE_DIR`
 - `HOST_TELEGRAM_BOT_API_DATA_DIR`
 
+In Docker mode, the bot container always uses fixed internal paths:
+
+- `DATA_DIR=/app/data`
+- `TMP_DIR=/app/tmp`
+- `PUBLIC_IMAGE_DIR=/app/public-images`
+
+So changing those three values in `.env` will not break Docker bind mounts.
+
 ## Static image hosting
 
 This project no longer relies on `https://telegra.ph/upload`.
