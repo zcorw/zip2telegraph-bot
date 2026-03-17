@@ -6,7 +6,7 @@ This project is a Telegram group bot that:
 
 1. Accepts ZIP uploads from group administrators
 2. Validates and extracts image files
-3. Uploads images to Telegraph-hosted URLs
+3. Copies images into a public static directory served by Nginx
 4. Creates a Telegraph page with title `zip_name - YYYY-MM-DD`
 5. Replies with the page URL or a structured failure reason
 
@@ -49,9 +49,14 @@ Maintains one async queue per chat and a worker task for each active chat.
 Validates the archive, prevents zip-slip extraction, enforces size limits,
 normalizes images where needed, and outputs ordered image files.
 
+### `services/static_publisher.py`
+
+Copies processed images into a persistent public directory and generates the
+public URLs later embedded into Telegraph pages.
+
 ### `services/telegraph.py`
 
-Encapsulates Telegraph account creation, image upload, and page creation.
+Encapsulates Telegraph account creation and page creation.
 
 ### `db.py`
 
@@ -127,6 +132,6 @@ calling `createPage`.
 ### Telegraph image upload
 
 The official Telegraph API docs define page creation and `img src` content, but
-do not document a first-party image upload API on the same page. This scaffold
-uses a dedicated `upload_image` client method pointed at `TELEGRAPH_UPLOAD_URL`
-so the implementation can be swapped without touching queueing or ZIP logic.
+do not define a stable first-party image upload API. This project therefore
+publishes images through your own Nginx-served static directory and only uses
+Telegraph for `createPage`.

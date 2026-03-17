@@ -13,6 +13,10 @@ Use local mode when you want ZIP support above `20 MB`.
 With the public Bot API, Telegram currently limits bot file downloads to
 `20 MB`. A local Bot API server removes that download limit.
 
+Local mode changes only the Telegram file transport path. It does not replace
+the static image hosting requirement. You still need your existing Nginx to
+serve `PUBLIC_IMAGE_DIR` at `PUBLIC_IMAGE_BASE_URL`.
+
 ## What this repository provides
 
 The repository includes:

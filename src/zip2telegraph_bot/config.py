@@ -31,12 +31,13 @@ class Settings:
     telegraph_author_name: str
     telegraph_author_url: str | None
     telegraph_api_url: str
-    telegraph_upload_url: str
     telegram_api_base: str | None
     telegram_local_mode: bool
     timezone: ZoneInfo
     data_dir: Path
     tmp_dir: Path
+    public_image_dir: Path
+    public_image_base_url: str
     log_level: str
     chat_rate_limit_window_seconds: int
     chat_rate_limit_max_calls: int
@@ -65,12 +66,17 @@ def load_settings() -> Settings:
 
     data_dir = Path(os.getenv("DATA_DIR", "./data")).resolve()
     tmp_dir = Path(os.getenv("TMP_DIR", "./tmp")).resolve()
+    public_image_dir = Path(os.getenv("PUBLIC_IMAGE_DIR", "./public-images")).resolve()
     data_dir.mkdir(parents=True, exist_ok=True)
     tmp_dir.mkdir(parents=True, exist_ok=True)
+    public_image_dir.mkdir(parents=True, exist_ok=True)
 
     telegraph_access_token = os.getenv("TELEGRAPH_ACCESS_TOKEN", "").strip() or None
     telegraph_author_url = os.getenv("TELEGRAPH_AUTHOR_URL", "").strip() or None
     telegram_api_base = os.getenv("TELEGRAM_API_BASE", "").strip() or None
+    public_image_base_url = os.getenv("PUBLIC_IMAGE_BASE_URL", "").strip().rstrip("/")
+    if not public_image_base_url:
+        raise RuntimeError("PUBLIC_IMAGE_BASE_URL is required")
 
     return Settings(
         bot_token=bot_token,
@@ -79,12 +85,13 @@ def load_settings() -> Settings:
         telegraph_author_name=os.getenv("TELEGRAPH_AUTHOR_NAME", "zip2telegraph-bot").strip(),
         telegraph_author_url=telegraph_author_url,
         telegraph_api_url=os.getenv("TELEGRAPH_API_URL", "https://api.telegra.ph").rstrip("/"),
-        telegraph_upload_url=os.getenv("TELEGRAPH_UPLOAD_URL", "https://telegra.ph/upload").rstrip("/"),
         telegram_api_base=telegram_api_base,
         telegram_local_mode=_env_bool("TELEGRAM_LOCAL_MODE", False),
         timezone=ZoneInfo(os.getenv("TIMEZONE", "Asia/Tokyo")),
         data_dir=data_dir,
         tmp_dir=tmp_dir,
+        public_image_dir=public_image_dir,
+        public_image_base_url=public_image_base_url,
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         chat_rate_limit_window_seconds=_env_int("CHAT_RATE_LIMIT_WINDOW_SECONDS", 300),
         chat_rate_limit_max_calls=_env_int("CHAT_RATE_LIMIT_MAX_CALLS", 1),
@@ -95,4 +102,3 @@ def load_settings() -> Settings:
         extracted_max_total_bytes=_env_int("EXTRACTED_MAX_TOTAL_BYTES", 2_147_483_648),
         task_timeout_seconds=_env_int("TASK_TIMEOUT_SECONDS", 1_200),
     )
-

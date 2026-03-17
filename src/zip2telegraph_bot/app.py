@@ -21,6 +21,7 @@ from zip2telegraph_bot.models import JobRequest
 from zip2telegraph_bot.queue import ChatJobManager
 from zip2telegraph_bot.services.admins import AdminService
 from zip2telegraph_bot.services.rate_limit import RateLimiter
+from zip2telegraph_bot.services.static_publisher import StaticImagePublisher
 from zip2telegraph_bot.services.telegraph import TelegraphClient
 from zip2telegraph_bot.services.zip_processor import ZipProcessor
 from zip2telegraph_bot.utils.clock import now_in_timezone
@@ -37,6 +38,7 @@ class AppContext:
     admin_service: AdminService
     rate_limiter: RateLimiter
     zip_processor: ZipProcessor
+    static_publisher: StaticImagePublisher
     telegraph_client: TelegraphClient
     job_manager: ChatJobManager
 
@@ -55,7 +57,6 @@ async def _run() -> None:
 
     telegraph_client = TelegraphClient(
         api_url=settings.telegraph_api_url,
-        upload_url=settings.telegraph_upload_url,
         short_name=settings.telegraph_short_name,
         author_name=settings.telegraph_author_name,
         author_url=settings.telegraph_author_url,
@@ -77,6 +78,10 @@ async def _run() -> None:
             image_max_size_bytes=settings.image_max_size_bytes,
             extracted_max_total_bytes=settings.extracted_max_total_bytes,
             zip_max_size_bytes=settings.transport_zip_limit_bytes,
+        ),
+        static_publisher=StaticImagePublisher(
+            public_image_dir=settings.public_image_dir,
+            public_image_base_url=settings.public_image_base_url,
         ),
         telegraph_client=telegraph_client,
         job_manager=None,  # type: ignore[arg-type]
@@ -201,10 +206,7 @@ async def _process_job_inner(context: AppContext, job: JobRequest, workspace: Pa
         title_date = now_in_timezone(context.settings.timezone).strftime("%Y-%m-%d")
         prepared = context.zip_processor.prepare(zip_path=zip_path, workspace=workspace, title_date=title_date)
 
-        image_urls: list[str] = []
-        for image in prepared.images:
-            image_urls.append(await context.telegraph_client.upload_image(image.path))
-
+        image_urls = context.static_publisher.publish(job.task_id, prepared.images)
         page_url = await context.telegraph_client.create_page(prepared.title, image_urls)
 
         finished_at = now_in_timezone(context.settings.timezone).isoformat()
@@ -220,4 +222,3 @@ async def cleanup_stale_tmp(tmp_dir: Path) -> None:
     for path in tmp_dir.iterdir():
         if path.is_dir():
             shutil.rmtree(path, ignore_errors=True)
-

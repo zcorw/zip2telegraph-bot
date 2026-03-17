@@ -7,5 +7,5 @@ services:
     volumes:
       - ./data:/app/data
       - ./tmp:/app/tmp
+      - ./public-images:/app/public-images
     restart: unless-stopped
-

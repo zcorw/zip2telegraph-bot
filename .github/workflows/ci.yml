@@ -127,13 +127,13 @@ jobs:
             APP_DIR="${APP_DIR:-/opt/zip2telegraph-bot}"
 
             mkdir -p "${APP_DIR}"
-            mkdir -p "${APP_DIR}/data" "${APP_DIR}/tmp" "${APP_DIR}/telegram-bot-api-data"
+            mkdir -p "${APP_DIR}/data" "${APP_DIR}/tmp" "${APP_DIR}/public-images" "${APP_DIR}/telegram-bot-api-data"
             if [ ! -f "${APP_DIR}/.env" ]; then
               echo "Missing ${APP_DIR}/.env. Upload it manually before deploying." >&2
               exit 1
             fi
 
-            find "${APP_DIR}" -mindepth 1 -maxdepth 1 ! -name data ! -name tmp ! -name telegram-bot-api-data ! -name .env -exec rm -rf {} +
+            find "${APP_DIR}" -mindepth 1 -maxdepth 1 ! -name data ! -name tmp ! -name public-images ! -name telegram-bot-api-data ! -name .env -exec rm -rf {} +
             tar -xzf /tmp/zip2telegraph-bot-deploy/release.tgz -C "${APP_DIR}"
 
             cd "${APP_DIR}"

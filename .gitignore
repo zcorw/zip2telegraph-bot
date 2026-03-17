@@ -10,6 +10,7 @@ __pycache__/
 .env
 data/
 tmp/
+public-images/
 telegram-bot-api-data/
 dist/
 build/

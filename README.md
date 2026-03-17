@@ -1,8 +1,8 @@
 # zip2telegraph-bot
 
 Telegram group bot that accepts ZIP uploads from group administrators, extracts
-image files, uploads them to Telegraph-hosted URLs, and publishes a Telegraph
-page.
+image files, publishes them through your existing Nginx static site, and
+creates a Telegraph page that references those public image URLs.
 
 ## What this starter package includes
 
@@ -10,7 +10,7 @@ page.
 - `SQLite` persistence for rate-limit events and task history
 - Per-group serial job queue
 - ZIP validation, natural file ordering, and temp directory cleanup
-- Telegraph account + page client abstraction
+- Local static image publishing + Telegraph page client
 - Docker and `docker compose` deployment artifacts
 - Unit tests for core rules
 
@@ -55,8 +55,9 @@ tests/
    - `.env.local-bot-api.example`
 3. Fill `BOT_TOKEN`
 4. Optionally set `TELEGRAPH_ACCESS_TOKEN`
-5. Choose public Bot API mode or local Bot API mode
-6. Run with Docker or local Python
+5. Set `PUBLIC_IMAGE_BASE_URL` to the URL served by your existing Nginx
+6. Choose public Bot API mode or local Bot API mode
+7. Run with Docker or local Python
 
 ### Docker
 
@@ -104,16 +105,22 @@ python -m zip2telegraph_bot
 
 - Mount `./data` to persist SQLite
 - Mount `./tmp` for temp files if you want visibility into disk usage
+- Mount `./public-images` and serve it through your existing Nginx
 - Mount `./telegram-bot-api-data` if you use the local Bot API server
 - The bot removes task temp directories after completion
 - On startup, the bot removes stale temp directories left by previous crashes
 
-## Next implementation decisions to validate in staging
+## Static image hosting
 
-- The image upload step currently targets `https://telegra.ph/upload`
-- That upload endpoint is not documented on the official Telegraph API page
-- The rest of the bot is isolated from that detail in
-  `TelegraphClient.upload_image`
+This project no longer relies on `https://telegra.ph/upload`.
+
+Instead:
+
+- The bot copies task images into `PUBLIC_IMAGE_DIR`
+- Your existing Nginx serves that directory as static files
+- `createPage` uses `PUBLIC_IMAGE_BASE_URL/...` URLs in each `img src`
+
+You need a publicly reachable host name or IP for `PUBLIC_IMAGE_BASE_URL`.
 
 ## Run tests
 
@@ -189,4 +196,5 @@ scp .env deploy@your-vps-host:/opt/zip2telegraph-bot/.env
 ```
 
 See `docs/deployment-vps.md` for the full VPS setup and GitHub configuration
-process. For local Bot API mode details, see `docs/local-bot-api.md`.
+process. For local Bot API mode details, see `docs/local-bot-api.md`. For the
+Nginx static image configuration, see `docs/nginx-static-images.md`.

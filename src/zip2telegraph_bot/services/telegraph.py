@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import mimetypes
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -13,27 +11,17 @@ from zip2telegraph_bot.errors import UserVisibleError
 
 logger = logging.getLogger(__name__)
 
-MIME_TYPE_BY_SUFFIX = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-}
-
 
 class TelegraphClient:
     def __init__(
         self,
         api_url: str,
-        upload_url: str,
         short_name: str,
         author_name: str,
         author_url: str | None,
         access_token: str | None,
     ) -> None:
         self._api_url = api_url.rstrip("/")
-        self._upload_url = upload_url
         self._short_name = short_name
         self._author_name = author_name
         self._author_url = author_url
@@ -58,36 +46,6 @@ class TelegraphClient:
         result = self._extract_result(response, "ERR_TELEGRAPH_ACCOUNT")
         self._access_token = result["access_token"]
         logger.warning("telegraph access token created; persist TELEGRAPH_ACCESS_TOKEN=%s", self._access_token)
-
-    async def upload_image(self, image_path: Path) -> str:
-        content_type = MIME_TYPE_BY_SUFFIX.get(image_path.suffix.lower()) or mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
-
-        with image_path.open("rb") as fh:
-            files = {"file": (image_path.name, fh, content_type)}
-            response = await self._http.post(self._upload_url, files=files)
-
-        if response.status_code >= 400:
-            logger.warning(
-                "telegraph upload failed status=%s image=%s content_type=%s body=%r",
-                response.status_code,
-                image_path.name,
-                content_type,
-                response.text[:500],
-            )
-            raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", f"Telegraph 图片上传失败，HTTP {response.status_code}")
-
-        data = response.json()
-        if not isinstance(data, list) or not data:
-            raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", "Telegraph 图片上传返回异常")
-
-        first = data[0]
-        if "error" in first:
-            raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", f"Telegraph 图片上传失败: {first['error']}")
-
-        src = first.get("src")
-        if not src:
-            raise UserVisibleError("ERR_IMAGE_UPLOAD_FAILED", "Telegraph 图片上传缺少地址")
-        return f"https://telegra.ph{src}"
 
     async def create_page(self, title: str, image_urls: list[str]) -> str:
         await self.ensure_account()

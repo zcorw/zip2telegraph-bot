@@ -8,7 +8,7 @@ This document describes the production deployment flow implemented by
 1. Runs tests on GitHub Actions
 2. Verifies the Docker image builds successfully
 3. On push to `main`, uploads a release archive to the VPS
-4. Recreates the app directory contents except `data/`, `tmp/`, and `.env`
+4. Recreates the app directory contents except `data/`, `tmp/`, `public-images/`, and `.env`
 5. Reuses the existing manually uploaded `.env`
 6. Chooses single-service or dual-service compose based on `.env`
 
@@ -19,6 +19,7 @@ This document describes the production deployment flow implemented by
 - Deployment branch: `main`
 - App directory: dedicated directory, recommended `/opt/zip2telegraph-bot`
 - Persistence: SQLite database and temp files stored under `data/` and `tmp/`
+- Published page images stored under `public-images/`
 - Optional local Bot API persistence stored under `telegram-bot-api-data/`
 
 ## Step 1: Prepare the VPS
@@ -59,7 +60,7 @@ Important:
 
 - Use a dedicated `VPS_APP_DIR`
 - The deployment workflow deletes all existing files in that directory except
-  `data/`, `tmp/`, `telegram-bot-api-data/`, and `.env`
+  `data/`, `tmp/`, `public-images/`, `telegram-bot-api-data/`, and `.env`
 
 ## Step 2: Create an SSH key for GitHub Actions
 
@@ -149,6 +150,7 @@ Recommended:
 - `TELEGRAPH_ACCESS_TOKEN`
 - `TIMEZONE`
 - `LOG_LEVEL`
+- `PUBLIC_IMAGE_BASE_URL`
 
 If you need ZIP support above `20 MB`, also configure:
 
@@ -170,6 +172,9 @@ ls -la /opt/zip2telegraph-bot/.env
 ```
 
 The deploy workflow will fail if `.env` is missing.
+
+You must also configure your existing Nginx to serve `public-images/` and point
+`PUBLIC_IMAGE_BASE_URL` at that public path. See `docs/nginx-static-images.md`.
 
 ### How to generate TELEGRAPH_ACCESS_TOKEN
 
@@ -254,6 +259,7 @@ Use manual runs when:
 ## Operational notes
 
 - `data/` and `tmp/` are preserved across deployments
+- `public-images/` is preserved across deployments
 - `.env` is preserved across deployments
 - `telegram-bot-api-data/` is preserved if local mode is enabled
 - Other files under `VPS_APP_DIR` are replaced on each deployment
